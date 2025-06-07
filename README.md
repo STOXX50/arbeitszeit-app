@@ -41,7 +41,7 @@ Eine moderne, benutzerfreundliche Web-Anwendung zur präzisen Berechnung von Arb
 
 ## 🚀 Live Demo
 
-🌐 **[Demo ansehen](https://timemanager.x6k.de/)**
+🌐 **[Demo ansehen](https://timemanager.x6k.de/){:target="_blank" rel="noopener"}**
 
 ## 🛠️ Technologie-Stack
 
