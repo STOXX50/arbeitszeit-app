@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -73,7 +73,7 @@ export default function ArbeitsZeitApp() {
   }
 
   // Berechne Gesamtstunden
-  const calculateTotalHours = (start: string, end: string, useAutomaticBreaks: boolean): string => {
+  const calculateTotalHours = useCallback((start: string, end: string, useAutomaticBreaks: boolean): string => {
     if (!start || !end) return ''
     
     const startMinutes = timeToMinutes(start)
@@ -97,10 +97,10 @@ export default function ArbeitsZeitApp() {
     const minutes = totalMinutes % 60
     
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-  }
+  }, [])
 
   // Berechne Zielzeiten
-  const calculateEndTimes = (startTime: string) => {
+  const calculateEndTimes = useCallback((startTime: string) => {
     if (!startTime) {
       setCalculatedEndTimes({ end1: '', end2: '', end3: '' })
       return
@@ -143,7 +143,7 @@ export default function ArbeitsZeitApp() {
     const end3 = minutesToTime(startMinutes + end3Minutes)
     
     setCalculatedEndTimes({ end1, end2, end3 })
-  }
+  }, [workingHours.useAutomaticBreaks, targetTimes.target1, targetTimes.target2, targetTimes.target3])
 
   // Hilfsfunktion: Aktuelle Pausenzeit ermitteln (für Anzeige)
   const getCurrentBreakTime = (): string => {
@@ -207,12 +207,12 @@ export default function ArbeitsZeitApp() {
       workingHours.useAutomaticBreaks
     )
     setWorkingHours(prev => ({ ...prev, totalHours: total }))
-  }, [workingHours.startTime, workingHours.endTime, workingHours.useAutomaticBreaks])
+  }, [workingHours.startTime, workingHours.endTime, workingHours.useAutomaticBreaks, calculateTotalHours])
 
   // Effect für Zielzeiten-Berechnung
   useEffect(() => {
     calculateEndTimes(workingHours.startTime)
-  }, [workingHours.startTime, targetTimes, workingHours.useAutomaticBreaks])
+  }, [workingHours.startTime, targetTimes, workingHours.useAutomaticBreaks, calculateEndTimes])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 transition-colors">
