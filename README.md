@@ -307,23 +307,16 @@ Nutzen Sie die [GitHub Issues](https://github.com/STOXX50/arbeitszeit-app/issues
 
 ## 📋 Roadmap
 
-### Version 2.0 (Q2 2025)
+### Version 2.0
 - [ ] **PWA Support** - Offline-Funktionalität
-- [ ] **Export-Funktionen** - PDF/Excel Export von Zeiterfassungen
-- [ ] **Zeiterfassung-Historie** - Speicherung vergangener Einträge
 - [ ] **Erweiterte Einstellungen** - Benutzerdefinierte Pausenzeiten
 
-### Version 3.0 (Q3 2025)
-- [ ] **Team-Features** - Multi-User Support
-- [ ] **API Integration** - Import aus Zeiterfassungssystemen
-- [ ] **Reporting Dashboard** - Erweiterte Auswertungen
+### Version 3.0
 - [ ] **Mobile App** - React Native Version
 
 ### Langfristig
-- [ ] **Kalender-Integration** - Outlook/Google Calendar Sync
 - [ ] **Automatische Erfassung** - Browser-Extension
 - [ ] **Künstliche Intelligenz** - Optimierungsvorschläge
-- [ ] **Enterprise Features** - SSO, Audit Logs
 
 ## 📊 Projektstatistiken
 
