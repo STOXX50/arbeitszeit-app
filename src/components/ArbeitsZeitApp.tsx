@@ -226,6 +226,7 @@ export default function ArbeitsZeitApp() {
               size="icon"
               onClick={toggleDarkMode}
               className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+              aria-label={darkMode ? "Zu hellem Modus wechseln" : "Zu dunklem Modus wechseln"}
             >
               {darkMode ? (
                 <Sun className="h-5 w-5" />
@@ -412,6 +413,7 @@ export default function ArbeitsZeitApp() {
                 size="sm"
                 onClick={() => setShowSettings(!showSettings)}
                 className="text-white hover:bg-white/20"
+                aria-label={showSettings ? "Einstellungen schließen" : "Einstellungen öffnen"}
               >
                 <Settings className="h-4 w-4" />
               </Button>
@@ -421,7 +423,7 @@ export default function ArbeitsZeitApp() {
             {/* Einstellungen */}
             {showSettings && (
               <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4 dark:text-gray-200">Zielzeiten anpassen</h3>
+                <h2 className="text-lg font-semibold mb-4 dark:text-gray-200">Zielzeiten anpassen</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="target1">Zielzeit 1</Label>
@@ -472,7 +474,7 @@ export default function ArbeitsZeitApp() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 bg-[#ff5a01]/10 rounded-lg border border-[#ff5a01]/30">
                     <div className="text-center">
-                      <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         {targetTimes.target1} Stunden
                       </div>
                       <div className="text-2xl font-bold text-[#ff5a01] mb-2">
@@ -480,7 +482,7 @@ export default function ArbeitsZeitApp() {
                       </div>
                       {(workingHours.startTime && workingHours.endTime) && (
                         <div className="border-t pt-2">
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Mehrstunden</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Mehrstunden</div>
                           <div className={`text-sm font-semibold ${
                             calculateOvertime(targetTimes.target1).isPositive 
                               ? 'text-green-600' 
@@ -494,7 +496,7 @@ export default function ArbeitsZeitApp() {
                   </div>
                   <div className="p-4 bg-[#2f53a7]/10 rounded-lg border border-[#2f53a7]/30">
                     <div className="text-center">
-                      <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         {targetTimes.target2} Stunden
                       </div>
                       <div className="text-2xl font-bold text-[#2f53a7] mb-2">
@@ -502,7 +504,7 @@ export default function ArbeitsZeitApp() {
                       </div>
                       {(workingHours.startTime && workingHours.endTime) && (
                         <div className="border-t pt-2">
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Mehrstunden</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Mehrstunden</div>
                           <div className={`text-sm font-semibold ${
                             calculateOvertime(targetTimes.target2).isPositive 
                               ? 'text-green-600' 
@@ -516,7 +518,7 @@ export default function ArbeitsZeitApp() {
                   </div>
                   <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
                     <div className="text-center">
-                      <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         {targetTimes.target3} Stunden
                       </div>
                       <div className="text-2xl font-bold text-gray-600 dark:text-gray-200 mb-2">
@@ -524,7 +526,7 @@ export default function ArbeitsZeitApp() {
                       </div>
                       {(workingHours.startTime && workingHours.endTime) && (
                         <div className="border-t pt-2">
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Mehrstunden</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Mehrstunden</div>
                           <div className={`text-sm font-semibold ${
                             calculateOvertime(targetTimes.target3).isPositive 
                               ? 'text-green-600' 
