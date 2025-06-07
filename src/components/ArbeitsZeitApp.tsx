@@ -9,6 +9,14 @@ import { Switch } from '@/components/ui/switch'
 import { Clock, Settings, Calculator, Coffee, Moon, Sun } from 'lucide-react'
 import { useDarkMode } from '@/hooks/useDarkMode'
 
+// Konstanten
+const MINUTES_PER_HOUR = 60
+const HOURS_PER_DAY = 24
+const MINUTES_PER_DAY = HOURS_PER_DAY * MINUTES_PER_HOUR
+const SIX_HOURS_IN_MINUTES = 6 * MINUTES_PER_HOUR
+const STANDARD_BREAK_MINUTES = 30
+const EXTENDED_BREAK_MINUTES = 45
+
 interface WorkingHours {
   startTime: string
   endTime: string
@@ -47,29 +55,25 @@ export default function ArbeitsZeitApp() {
 
   // Hilfsfunktion: Zeit in Minuten konvertieren
   const timeToMinutes = (time: string): number => {
-    if (!time || !time.includes(':')) return 0
+    if (!time?.includes(':')) return 0
     const [hours, minutes] = time.split(':').map(Number)
-    return hours * 60 + minutes
+    return hours * MINUTES_PER_HOUR + minutes
   }
 
   // Hilfsfunktion: Minuten in Zeit konvertieren  
   const minutesToTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
+    const hours = Math.floor(minutes / MINUTES_PER_HOUR)
+    const mins = minutes % MINUTES_PER_HOUR
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
   }
 
   // Hilfsfunktion: Automatische Pausenzeit bestimmen (externe System-Logik)
   const getAutomaticBreakTime = (totalMinutes: number): number => {
-    const totalHours = totalMinutes / 60
+    const totalHours = totalMinutes / MINUTES_PER_HOUR
     
-    if (totalHours < 6) {
-      return 0 // Keine Pause unter 6 Stunden
-    } else if (totalHours >= 6 && totalHours <= 9) {
-      return 30 // 30 Min Pause von 6 bis 9 Stunden
-    } else {
-      return 45 // 30 Min + 15 Min zusätzlich = 45 Min ab über 9 Stunden
-    }
+    if (totalHours < 6) return 0
+    if (totalHours <= 9) return STANDARD_BREAK_MINUTES
+    return EXTENDED_BREAK_MINUTES
   }
 
   // Berechne Gesamtstunden
@@ -80,21 +84,18 @@ export default function ArbeitsZeitApp() {
     const endMinutes = timeToMinutes(end)
     
     let totalMinutes = endMinutes - startMinutes
-    if (totalMinutes < 0) {
-      totalMinutes += 24 * 60 // Übernacht
-    }
+    if (totalMinutes < 0) totalMinutes += MINUTES_PER_DAY // Übernacht
     
     // Automatische Pausenzeit abziehen, wenn aktiviert
     if (useAutomaticBreaks) {
-      const breakMinutes = getAutomaticBreakTime(totalMinutes)
-      totalMinutes -= breakMinutes
+      totalMinutes -= getAutomaticBreakTime(totalMinutes)
     }
     
     // Negative Zeiten vermeiden
     if (totalMinutes < 0) totalMinutes = 0
     
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
+    const hours = Math.floor(totalMinutes / MINUTES_PER_HOUR)
+    const minutes = totalMinutes % MINUTES_PER_HOUR
     
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
   }, [])
@@ -113,51 +114,47 @@ export default function ArbeitsZeitApp() {
       const targetMinutes = timeToMinutes(targetHours)
       
       // Wenn Zielzeit 6:00 Std oder weniger ist, keine Pause berechnen
-      if (targetMinutes <= 360) { // 360 Min = 6 Std
-        return targetMinutes
-      }
+      if (targetMinutes <= SIX_HOURS_IN_MINUTES) return targetMinutes
       
       if (workingHours.useAutomaticBreaks) {
-        // Wir müssen iterativ die benötigte Gesamtzeit finden
-        // da die Pausenzeit von der Gesamtzeit abhängt
+        // Iterativ die benötigte Gesamtzeit finden
         for (let totalMinutes = targetMinutes; totalMinutes <= targetMinutes + 60; totalMinutes++) {
           const breakMinutes = getAutomaticBreakTime(totalMinutes)
-          const workingMinutes = totalMinutes - breakMinutes
-          
-          if (workingMinutes >= targetMinutes) {
+          if (totalMinutes - breakMinutes >= targetMinutes) {
             return totalMinutes
           }
         }
-        return targetMinutes + getAutomaticBreakTime(targetMinutes + 45) // Fallback
+        return targetMinutes + EXTENDED_BREAK_MINUTES // Fallback mit Standard-Pause
       }
       
-      return targetMinutes // Ohne Pausen
+      return targetMinutes
     }
     
-    const end1Minutes = calculateRequiredWorkTime(targetTimes.target1)
-    const end2Minutes = calculateRequiredWorkTime(targetTimes.target2)
-    const end3Minutes = calculateRequiredWorkTime(targetTimes.target3)
+    const targets = [targetTimes.target1, targetTimes.target2, targetTimes.target3]
+    const endTimes = targets.map(target => {
+      const requiredMinutes = calculateRequiredWorkTime(target)
+      return minutesToTime(startMinutes + requiredMinutes)
+    })
     
-    const end1 = minutesToTime(startMinutes + end1Minutes)
-    const end2 = minutesToTime(startMinutes + end2Minutes)
-    const end3 = minutesToTime(startMinutes + end3Minutes)
-    
-    setCalculatedEndTimes({ end1, end2, end3 })
+    setCalculatedEndTimes({
+      end1: endTimes[0],
+      end2: endTimes[1], 
+      end3: endTimes[2]
+    })
   }, [workingHours.useAutomaticBreaks, targetTimes.target1, targetTimes.target2, targetTimes.target3])
 
   // Hilfsfunktion: Aktuelle Pausenzeit ermitteln (für Anzeige)
   const getCurrentBreakTime = (): string => {
-    if (workingHours.useAutomaticBreaks && workingHours.startTime && workingHours.endTime) {
-      const startMinutes = timeToMinutes(workingHours.startTime)
-      const endMinutes = timeToMinutes(workingHours.endTime)
-      let totalMinutes = endMinutes - startMinutes
-      if (totalMinutes < 0) totalMinutes += 24 * 60
-      
-      const automaticBreakMinutes = getAutomaticBreakTime(totalMinutes)
-      return minutesToTime(automaticBreakMinutes)
+    if (!workingHours.useAutomaticBreaks || !workingHours.startTime || !workingHours.endTime) {
+      return '00:00'
     }
     
-    return '00:00'
+    const startMinutes = timeToMinutes(workingHours.startTime)
+    const endMinutes = timeToMinutes(workingHours.endTime)
+    let totalMinutes = endMinutes - startMinutes
+    if (totalMinutes < 0) totalMinutes += MINUTES_PER_DAY
+    
+    return minutesToTime(getAutomaticBreakTime(totalMinutes))
   }
 
   // Hilfsfunktion: Mehrstunden berechnen (externe System-Logik)
@@ -166,36 +163,27 @@ export default function ArbeitsZeitApp() {
       return { text: '00:00 Std.', isPositive: true }
     }
     
-    // Bruttoarbeitszeit berechnen
     const startMinutes = timeToMinutes(workingHours.startTime)
     const endMinutes = timeToMinutes(workingHours.endTime)
     let bruttoMinutes = endMinutes - startMinutes
-    if (bruttoMinutes < 0) {
-      bruttoMinutes += 24 * 60 // Übernacht
-    }
+    if (bruttoMinutes < 0) bruttoMinutes += MINUTES_PER_DAY // Übernacht
     
     const targetMinutes = timeToMinutes(targetHours)
     let arbeitsMinutes = bruttoMinutes
     
     // Bei Zielzeiten ÜBER 6 Stunden: Pausenabzug für Mehrstunden-Berechnung
-    if (targetMinutes > 360) { // 360 Min = 6 Std
-      if (workingHours.useAutomaticBreaks) {
-        const breakMinutes = getAutomaticBreakTime(bruttoMinutes)
-        arbeitsMinutes = bruttoMinutes - breakMinutes
-      }
+    if (targetMinutes > SIX_HOURS_IN_MINUTES && workingHours.useAutomaticBreaks) {
+      arbeitsMinutes = bruttoMinutes - getAutomaticBreakTime(bruttoMinutes)
     }
-    // Bei Zielzeiten <= 6 Stunden: Keine Pausenabzüge (Bruttoarbeitszeit)
     
     const diffMinutes = arbeitsMinutes - targetMinutes
-    
-    const hours = Math.floor(Math.abs(diffMinutes) / 60)
-    const minutes = Math.abs(diffMinutes) % 60
+    const hours = Math.floor(Math.abs(diffMinutes) / MINUTES_PER_HOUR)
+    const minutes = Math.abs(diffMinutes) % MINUTES_PER_HOUR
     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} Std.`
     
-    if (diffMinutes >= 0) {
-      return { text: `+ ${timeString}`, isPositive: true }
-    } else {
-      return { text: `- ${timeString}`, isPositive: false }
+    return {
+      text: diffMinutes >= 0 ? `+ ${timeString}` : `- ${timeString}`,
+      isPositive: diffMinutes >= 0
     }
   }
 
