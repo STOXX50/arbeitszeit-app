@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,6 +8,18 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Clock, Settings, Calculator, Coffee, Moon, Sun } from 'lucide-react'
 import { useDarkMode } from '@/hooks/useDarkMode'
+import SettingsPanel from './SettingsPanel'
+
+// CSS-Klassen Konstanten für bessere Maintainability
+const CSS_CLASSES = {
+  container: "min-h-screen bg-gray-50 dark:bg-gray-900 p-4 transition-colors",
+  maxWidth: "max-w-4xl mx-auto space-y-6",
+  targetCard: "p-4 rounded-lg border",
+  targetTime: "text-2xl font-bold mb-2",
+  mehrstundenText: "text-xs text-gray-600 dark:text-gray-300 mb-1",
+  positiveOvertime: "text-sm font-semibold text-green-600 dark:text-green-400",
+  negativeOvertime: "text-sm font-semibold text-red-600 dark:text-red-400"
+} as const
 
 // Konstanten
 const MINUTES_PER_HOUR = 60
@@ -53,10 +65,13 @@ export default function ArbeitsZeitApp() {
     end3: ''
   })
 
-  // Hilfsfunktion: Zeit in Minuten konvertieren
+  // Hilfsfunktion: Zeit in Minuten konvertieren mit Validierung
   const timeToMinutes = (time: string): number => {
     if (!time?.includes(':')) return 0
     const [hours, minutes] = time.split(':').map(Number)
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return 0
+    }
     return hours * MINUTES_PER_HOUR + minutes
   }
 
@@ -143,8 +158,8 @@ export default function ArbeitsZeitApp() {
     })
   }, [workingHours.useAutomaticBreaks, targetTimes.target1, targetTimes.target2, targetTimes.target3])
 
-  // Hilfsfunktion: Aktuelle Pausenzeit ermitteln (für Anzeige)
-  const getCurrentBreakTime = (): string => {
+  // Memoized: Aktuelle Pausenzeit
+  const memoizedBreakTime = useMemo(() => {
     if (!workingHours.useAutomaticBreaks || !workingHours.startTime || !workingHours.endTime) {
       return '00:00'
     }
@@ -155,10 +170,10 @@ export default function ArbeitsZeitApp() {
     if (totalMinutes < 0) totalMinutes += MINUTES_PER_DAY
     
     return minutesToTime(getAutomaticBreakTime(totalMinutes))
-  }
+  }, [workingHours.useAutomaticBreaks, workingHours.startTime, workingHours.endTime])
 
   // Hilfsfunktion: Mehrstunden berechnen (externe System-Logik)
-  const calculateOvertime = (targetHours: string): { text: string; isPositive: boolean } => {
+  const calculateOvertime = useCallback((targetHours: string): { text: string; isPositive: boolean } => {
     if (!workingHours.startTime || !workingHours.endTime || !targetHours) {
       return { text: '00:00 Std.', isPositive: true }
     }
@@ -185,7 +200,7 @@ export default function ArbeitsZeitApp() {
       text: diffMinutes >= 0 ? `+ ${timeString}` : `- ${timeString}`,
       isPositive: diffMinutes >= 0
     }
-  }
+  }, [workingHours.startTime, workingHours.endTime, workingHours.useAutomaticBreaks])
 
   // Effect für Gesamtstunden-Berechnung
   useEffect(() => {
@@ -197,15 +212,26 @@ export default function ArbeitsZeitApp() {
     setWorkingHours(prev => ({ ...prev, totalHours: total }))
   }, [workingHours.startTime, workingHours.endTime, workingHours.useAutomaticBreaks, calculateTotalHours])
 
+  // Memoized: Check if both times are entered
+  const hasValidTimes = useMemo(() => 
+    Boolean(workingHours.startTime && workingHours.endTime),
+    [workingHours.startTime, workingHours.endTime]
+  )
+
+  // Memoized berechnete Werte für bessere Performance
+  const memoizedOvertimes = useMemo(() => ({
+    overtime1: calculateOvertime(targetTimes.target1),
+    overtime2: calculateOvertime(targetTimes.target2),
+    overtime3: calculateOvertime(targetTimes.target3)
+  }), [calculateOvertime, targetTimes])
+
   // Effect für Zielzeiten-Berechnung
   useEffect(() => {
     calculateEndTimes(workingHours.startTime)
   }, [workingHours.startTime, targetTimes, workingHours.useAutomaticBreaks, calculateEndTimes])
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 transition-colors">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
+    <div className={CSS_CLASSES.container}>
+      <div className={CSS_CLASSES.maxWidth}>
         <div className="text-center py-6 relative">
           {/* Dark Mode Toggle */}
           <div className="absolute top-0 right-0">
@@ -347,7 +373,7 @@ export default function ArbeitsZeitApp() {
                 {workingHours.useAutomaticBreaks && (
                   <div className="text-sm bg-blue-50 dark:bg-blue-900/30 p-2 rounded border dark:border-blue-800">
                     <div className="font-medium text-blue-800 dark:text-blue-200">Aktuelle Pause:</div>
-                    <div className="text-blue-600 dark:text-blue-300">{getCurrentBreakTime()}</div>
+                    <div className="text-blue-600 dark:text-blue-300">{memoizedBreakTime}</div>
                   </div>
                 )}
 
@@ -410,47 +436,10 @@ export default function ArbeitsZeitApp() {
           <CardContent className="p-6">
             {/* Einstellungen */}
             {showSettings && (
-              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <h2 className="text-lg font-semibold mb-4 dark:text-gray-200">Zielzeiten anpassen</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="target1">Zielzeit 1</Label>
-                    <Input
-                      id="target1"
-                      type="time"
-                      value={targetTimes.target1}
-                      onChange={(e) => setTargetTimes(prev => ({
-                        ...prev,
-                        target1: e.target.value
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="target2">Zielzeit 2</Label>
-                    <Input
-                      id="target2"
-                      type="time"
-                      value={targetTimes.target2}
-                      onChange={(e) => setTargetTimes(prev => ({
-                        ...prev,
-                        target2: e.target.value
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="target3">Zielzeit 3</Label>
-                    <Input
-                      id="target3"
-                      type="time"
-                      value={targetTimes.target3}
-                      onChange={(e) => setTargetTimes(prev => ({
-                        ...prev,
-                        target3: e.target.value
-                      }))}
-                    />
-                  </div>
-                </div>
-              </div>
+              <SettingsPanel 
+                targetTimes={targetTimes}
+                onTargetTimesChange={setTargetTimes}
+              />
             )}
 
             {/* Berechnete Endzeiten */}
@@ -468,15 +457,15 @@ export default function ArbeitsZeitApp() {
                       <div className="text-2xl font-bold text-[#ff5a01] mb-2">
                         {calculatedEndTimes.end1}
                       </div>
-                      {(workingHours.startTime && workingHours.endTime) && (
+                      {hasValidTimes && (
                         <div className="border-t pt-2">
-                          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Mehrstunden</div>
-                          <div className={`text-sm font-semibold ${
-                            calculateOvertime(targetTimes.target1).isPositive 
-                              ? 'text-green-600' 
-                              : 'text-red-600'
-                          }`}>
-                            {calculateOvertime(targetTimes.target1).text}
+                          <div className={CSS_CLASSES.mehrstundenText}>Mehrstunden</div>
+                          <div className={
+                            memoizedOvertimes.overtime1.isPositive 
+                              ? CSS_CLASSES.positiveOvertime
+                              : CSS_CLASSES.negativeOvertime
+                          }>
+                            {memoizedOvertimes.overtime1.text}
                           </div>
                         </div>
                       )}
@@ -490,15 +479,15 @@ export default function ArbeitsZeitApp() {
                       <div className="text-2xl font-bold text-[#2f53a7] mb-2">
                         {calculatedEndTimes.end2}
                       </div>
-                      {(workingHours.startTime && workingHours.endTime) && (
+                      {hasValidTimes && (
                         <div className="border-t pt-2">
-                          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Mehrstunden</div>
-                          <div className={`text-sm font-semibold ${
-                            calculateOvertime(targetTimes.target2).isPositive 
-                              ? 'text-green-600' 
-                              : 'text-red-600'
-                          }`}>
-                            {calculateOvertime(targetTimes.target2).text}
+                          <div className={CSS_CLASSES.mehrstundenText}>Mehrstunden</div>
+                          <div className={
+                            memoizedOvertimes.overtime2.isPositive 
+                              ? CSS_CLASSES.positiveOvertime
+                              : CSS_CLASSES.negativeOvertime
+                          }>
+                            {memoizedOvertimes.overtime2.text}
                           </div>
                         </div>
                       )}
@@ -512,15 +501,15 @@ export default function ArbeitsZeitApp() {
                       <div className="text-2xl font-bold text-gray-600 dark:text-gray-200 mb-2">
                         {calculatedEndTimes.end3}
                       </div>
-                      {(workingHours.startTime && workingHours.endTime) && (
+                      {hasValidTimes && (
                         <div className="border-t pt-2">
-                          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Mehrstunden</div>
-                          <div className={`text-sm font-semibold ${
-                            calculateOvertime(targetTimes.target3).isPositive 
-                              ? 'text-green-600' 
-                              : 'text-red-600'
-                          }`}>
-                            {calculateOvertime(targetTimes.target3).text}
+                          <div className={CSS_CLASSES.mehrstundenText}>Mehrstunden</div>
+                          <div className={
+                            memoizedOvertimes.overtime3.isPositive 
+                              ? CSS_CLASSES.positiveOvertime
+                              : CSS_CLASSES.negativeOvertime
+                          }>
+                            {memoizedOvertimes.overtime3.text}
                           </div>
                         </div>
                       )}
