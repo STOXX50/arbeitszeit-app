@@ -35,7 +35,7 @@ Eine moderne, benutzerfreundliche Web-Anwendung zur präzisen Berechnung von Arb
 - **Automatische Pausenzeiten-Berechnung**: 
   - < 6 Std: 0 Min Pause
   - 6-9 Std: 30 Min Pause  
-  - > 9 Std: 45 Min Pause (30+15 zusätzlich)
+  - \> 9 Std: 45 Min Pause (30+15 zusätzlich)
 - **Präzise Mehrstunden-Berechnung** unterschiedlich je Zielzeit
 - **Gesetzeskonforme Rundung** ohne Datenverlust
 
@@ -58,12 +58,12 @@ Eine moderne, benutzerfreundliche Web-Anwendung zur präzisen Berechnung von Arb
 
 ### Light Mode - Hauptansicht
 ```
-![Screenshot of Light Mode](/screenshots/normal-mode.png)
+![Screenshot of Light Mode](https://github.com/STOXX50/arbeitszeit-app/blob/01fbc3eb3ed97fefa590501525da797c54e60b7b/screenshots/normal-mode.png)
 ```
 
 ### Dark Mode - Gleiche Funktionalität
 ```
-![Screenshot of Dark Mode](/screenshots/dark-mode.png)
+![Screenshot of Dark Mode](https://github.com/STOXX50/arbeitszeit-app/blob/01fbc3eb3ed97fefa590501525da797c54e60b7b/screenshots/dark-mode.png)
 ```
 
 ## 🚀 Schnellstart
