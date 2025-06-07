@@ -58,12 +58,12 @@ Eine moderne, benutzerfreundliche Web-Anwendung zur präzisen Berechnung von Arb
 
 ### Light Mode - Hauptansicht
 ```
-![Screenshot of Light Mode](https://raw.githubusercontent.com/STOXX50/arbeitszeit-app/refs/heads/master/screenshots/normal-mode.png)
+![Screenshot of Light Mode](/screenshots/normal-mode.png)
 ```
 
 ### Dark Mode - Gleiche Funktionalität
 ```
-![Screenshot of Dark Mode](https://raw.githubusercontent.com/STOXX50/arbeitszeit-app/refs/heads/master/screenshots/dark-mode.png)
+![Screenshot of Dark Mode](/screenshots/dark-mode.png)
 ```
 
 ## 🚀 Schnellstart
