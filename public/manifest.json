@@ -1,0 +1,41 @@
+{
+  "name": "Arbeitszeit Rechner",
+  "short_name": "ArbeitszeitApp",
+  "description": "Präzise Zeiterfassung nach deutschem Arbeitsrecht",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff5a01",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "de",
+  "categories": ["productivity", "business", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.jpg",
+      "sizes": "390x844",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-desktop.jpg", 
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide"
+    }
+  ],
+  "features": [
+    "Automatische Pausenzeiten nach deutschem Arbeitsschutzgesetz",
+    "Mehrstunden-Berechnung mit verschiedenen Zielzeiten",
+    "Dark Mode Support",
+    "Responsive Design für alle Geräte"
+  ]
+}
