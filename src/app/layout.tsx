@@ -75,6 +75,25 @@ export default function RootLayout({
         {(process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENABLE_SPEED_INSIGHTS === 'true') && (
           <SpeedInsights />
         )}
+        
+        {/* Service Worker Registrierung */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('SW registered: ', registration);
+                    })
+                    .catch(function(registrationError) {
+                      console.log('SW registration failed: ', registrationError);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

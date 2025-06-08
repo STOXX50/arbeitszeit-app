@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { Clock, Settings, Calculator, Coffee, Moon, Sun } from 'lucide-react'
+import { Clock, Settings, Calculator, Coffee, Moon, Sun, Wifi, WifiOff } from 'lucide-react'
 import { useDarkMode } from '@/hooks/useDarkMode'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { storage } from '@/lib/storage'
+import OfflineIndicator from './OfflineIndicator'
 import SettingsPanel from './SettingsPanel'
 
 // CSS-Klassen Konstanten für bessere Maintainability
@@ -44,6 +47,7 @@ interface TargetTimes {
 
 export default function ArbeitsZeitApp() {
   const { darkMode, toggleDarkMode } = useDarkMode()
+  const { isOnline, isOfflineCapable } = useOnlineStatus()
   
   const [workingHours, setWorkingHours] = useState<WorkingHours>({
     startTime: '',
@@ -64,6 +68,97 @@ export default function ArbeitsZeitApp() {
     end2: '',
     end3: ''
   })
+
+  // Auto-Save für Offline-Persistierung
+  const [autoSave, setAutoSave] = useState(true)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+
+  // OFFLINE-006, OFFLINE-007, OFFLINE-008: Daten beim Start laden
+  useEffect(() => {
+    const loadSavedData = () => {
+      try {
+        // Arbeitszeiten laden
+        const savedWorkingHours = storage.getWorkingHours()
+        if (savedWorkingHours) {
+          setWorkingHours(prev => ({
+            ...prev,
+            startTime: savedWorkingHours.startTime || '',
+            endTime: savedWorkingHours.endTime || '',
+            useAutomaticBreaks: savedWorkingHours.useAutomaticBreaks ?? true
+          }))
+        }
+
+        // Zielzeiten laden
+        const savedTargetTimes = storage.getTargetTimes()
+        if (savedTargetTimes) {
+          setTargetTimes(savedTargetTimes)
+        }
+
+        // Einstellungen laden (inkl. Dark Mode)
+        const savedSettings = storage.getSettings()
+        if (savedSettings) {
+          setAutoSave(savedSettings.autoSave ?? true)
+          // Dark Mode wird bereits vom useDarkMode Hook geladen
+        }
+
+        console.log('📱 Offline-Daten erfolgreich geladen')
+      } catch (error) {
+        console.error('Fehler beim Laden der Offline-Daten:', error)
+      }
+    }
+
+    loadSavedData()
+  }, [])
+
+  // Auto-Save Effect für Arbeitszeiten
+  useEffect(() => {
+    if (autoSave && (workingHours.startTime || workingHours.endTime)) {
+      const saveData = () => {
+        const success = storage.saveWorkingHours({
+          startTime: workingHours.startTime,
+          endTime: workingHours.endTime,
+          totalHours: workingHours.totalHours,
+          useAutomaticBreaks: workingHours.useAutomaticBreaks
+        })
+        
+        if (success) {
+          setLastSaved(new Date())
+        }
+      }
+
+      // Debounced Save (500ms Verzögerung)
+      const timeoutId = setTimeout(saveData, 500)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [workingHours, autoSave])
+
+  // Auto-Save für Zielzeiten
+  useEffect(() => {
+    if (autoSave && targetTimes) {
+      const timeoutId = setTimeout(() => {
+        storage.saveTargetTimes(targetTimes)
+      }, 500)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [targetTimes, autoSave])
+
+  // Berechnung zur Historie hinzufügen
+  const saveToHistory = useCallback(() => {
+    if (workingHours.startTime && workingHours.endTime && workingHours.totalHours) {
+      const success = storage.addToHistory({
+        date: new Date().toISOString(),
+        startTime: workingHours.startTime,
+        endTime: workingHours.endTime,
+        totalHours: workingHours.totalHours,
+        breakTime: memoizedBreakTime,
+        overtime: memoizedOvertimes.overtime2.text // Standard-Zielzeit als Referenz
+      })
+      
+      if (success) {
+        console.log('✅ Berechnung zur Historie hinzugefügt')
+      }
+    }
+  }, [workingHours, memoizedBreakTime, memoizedOvertimes.overtime2.text])
 
   // Hilfsfunktion: Zeit in Minuten konvertieren mit Validierung
   const timeToMinutes = (time: string): number => {
@@ -231,10 +326,25 @@ export default function ArbeitsZeitApp() {
   }, [workingHours.startTime, targetTimes, workingHours.useAutomaticBreaks, calculateEndTimes])
   return (
     <div className={CSS_CLASSES.container}>
+      {/* Offline-Indikator */}
+      <OfflineIndicator showWhenOnline={false} />
+      
       <div className={CSS_CLASSES.maxWidth}>
         <div className="text-center py-6 relative">
           {/* Dark Mode Toggle */}
-          <div className="absolute top-0 right-0">
+          <div className="absolute top-0 right-0 flex items-center gap-2">
+            {/* Offline-Status für Header */}
+            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+              {isOnline ? (
+                <Wifi className="w-3 h-3 text-green-500" />
+              ) : (
+                <WifiOff className="w-3 h-3 text-orange-500" />
+              )}
+              <span>
+                {isOnline ? 'Online' : isOfflineCapable ? 'Offline-bereit' : 'Offline'}
+              </span>
+            </div>
+            
             <Button
               variant="ghost"
               size="icon"
