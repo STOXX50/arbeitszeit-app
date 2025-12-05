@@ -76,7 +76,7 @@ Eine hochmoderne, benutzerfreundliche Web-Anwendung zur präzisen Berechnung von
 ## 🛠️ Technologie-Stack
 
 ### Core Technologies
-- **Framework**: Next.js 15.3.3 (App Router, React 19)
+- **Framework**: Next.js 15.3.6 (App Router, React 19)
 - **Sprache**: TypeScript 5 (100% Coverage)
 - **Styling**: Tailwind CSS 4 + CSS-in-JS Optimierungen
 - **State Management**: React Hooks + localStorage (Persistent)
