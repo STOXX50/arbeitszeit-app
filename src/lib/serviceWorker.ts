@@ -1,10 +1,15 @@
 // Service Worker Registration und Utils
 // Erfüllt Testfälle: SW-001, SW-002, SW-003, SW-004, SW-006, SW-007, SW-008
 
+import { Workbox } from 'workbox-window'
+
 export class ServiceWorkerManager {
-  private workbox: any = null
+  //private workbox: unknown = null
+  //private workbox: WorkboxLike | null = null
+  private workbox: Workbox | null = null
   private updateAvailable = false
-  private onUpdateCallback?: (registration: ServiceWorkerRegistration) => void
+  //private onUpdateCallback?: (registration: ServiceWorkerRegistration) => void
+  private onUpdateCallback?: (sw: ServiceWorker) => void
 
   constructor() {
     this.initServiceWorker()
@@ -23,12 +28,31 @@ export class ServiceWorkerManager {
         const { Workbox } = await import('workbox-window')
         this.workbox = new Workbox('/sw.js')
         
+        /*
+        type WorkboxWaitingEvent = Event & {
+          sw: ServiceWorker
+        }
+        */
+
         // SW-006, SW-007: Update Detection
+        /*
         this.workbox.addEventListener('waiting', (event: any) => {
           this.updateAvailable = true
           this.onUpdateCallback?.(event.sw)
           this.showUpdatePrompt()
         })
+        */
+        this.workbox?.addEventListener('waiting', (event) => {
+          this.updateAvailable = true
+
+          if (event.sw) {
+            this.onUpdateCallback?.(event.sw)
+          }
+          //this.onUpdateCallback?.(event.sw)
+
+          this.showUpdatePrompt()
+        })
+
 
         // SW-008: Update ohne Datenverlust
         this.workbox.addEventListener('controlling', () => {
@@ -96,7 +120,12 @@ export class ServiceWorkerManager {
   }
 
   // Callback für Update-Events
+  /*
   public onUpdate(callback: (registration: ServiceWorkerRegistration) => void) {
+    this.onUpdateCallback = callback
+  }
+  */
+  public onUpdate(callback: (sw: ServiceWorker) => void) {
     this.onUpdateCallback = callback
   }
 

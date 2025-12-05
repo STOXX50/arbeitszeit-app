@@ -40,7 +40,7 @@ class LocalStorageManager {
   }
 
   // DATA-003: Ungültige Daten behandeln
-  private isValidData(data: any): boolean {
+  private isValidData(data: unknown): boolean {
     try {
       return data !== null && typeof data === 'object'
     } catch {
