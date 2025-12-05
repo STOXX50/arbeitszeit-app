@@ -8,17 +8,17 @@ export interface StorageData {
     totalHours: string
     useAutomaticBreaks: boolean
     lastCalculated?: string
-  }
+  } | null
   targetTimes?: {
     target1: string
     target2: string
     target3: string
-  }
+  } | null
   settings?: {
     darkMode: boolean
     notifications: boolean
     autoSave: boolean
-  }
+  } | null
   history?: Array<{
     id: string
     date: string
@@ -167,7 +167,14 @@ class LocalStorageManager {
   }
 
   // OFFLINE-009: Historie verwalten
-  public addToHistory(entry: Omit<StorageData['history'][0], 'id'>): boolean {
+  public addToHistory(entry: {
+    date: string
+    startTime: string
+    endTime: string
+    totalHours: string
+    breakTime: string
+    overtime?: string
+  }): boolean {
     const history = this.getHistory()
     const newEntry = {
       id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

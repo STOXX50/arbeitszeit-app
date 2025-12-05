@@ -71,7 +71,7 @@ export default function ArbeitsZeitApp() {
 
   // Auto-Save für Offline-Persistierung
   const [autoSave, setAutoSave] = useState(true)
-  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  // const [lastSaved, setLastSaved] = useState<Date | null>(null) // Für zukünftige Verwendung
 
   // OFFLINE-006, OFFLINE-007, OFFLINE-008: Daten beim Start laden
   useEffect(() => {
@@ -122,7 +122,7 @@ export default function ArbeitsZeitApp() {
         })
         
         if (success) {
-          setLastSaved(new Date())
+          // setLastSaved(new Date()) // Für zukünftige Verwendung
         }
       }
 
@@ -141,24 +141,6 @@ export default function ArbeitsZeitApp() {
       return () => clearTimeout(timeoutId)
     }
   }, [targetTimes, autoSave])
-
-  // Berechnung zur Historie hinzufügen
-  const saveToHistory = useCallback(() => {
-    if (workingHours.startTime && workingHours.endTime && workingHours.totalHours) {
-      const success = storage.addToHistory({
-        date: new Date().toISOString(),
-        startTime: workingHours.startTime,
-        endTime: workingHours.endTime,
-        totalHours: workingHours.totalHours,
-        breakTime: memoizedBreakTime,
-        overtime: memoizedOvertimes.overtime2.text // Standard-Zielzeit als Referenz
-      })
-      
-      if (success) {
-        console.log('✅ Berechnung zur Historie hinzugefügt')
-      }
-    }
-  }, [workingHours, memoizedBreakTime, memoizedOvertimes.overtime2.text])
 
   // Hilfsfunktion: Zeit in Minuten konvertieren mit Validierung
   const timeToMinutes = (time: string): number => {
@@ -319,6 +301,24 @@ export default function ArbeitsZeitApp() {
     overtime2: calculateOvertime(targetTimes.target2),
     overtime3: calculateOvertime(targetTimes.target3)
   }), [calculateOvertime, targetTimes])
+
+  // Berechnung zur Historie hinzufügen (für zukünftige Verwendung)
+  // const saveToHistory = useCallback(() => {
+  //   if (workingHours.startTime && workingHours.endTime && workingHours.totalHours) {
+  //     const success = storage.addToHistory({
+  //       date: new Date().toISOString(),
+  //       startTime: workingHours.startTime,
+  //       endTime: workingHours.endTime,
+  //       totalHours: workingHours.totalHours,
+  //       breakTime: memoizedBreakTime,
+  //       overtime: memoizedOvertimes.overtime2.text // Standard-Zielzeit als Referenz
+  //     })
+  //     
+  //     if (success) {
+  //       console.log('✅ Berechnung zur Historie hinzugefügt')
+  //     }
+  //   }
+  // }, [workingHours, memoizedBreakTime, memoizedOvertimes.overtime2.text])
 
   // Effect für Zielzeiten-Berechnung
   useEffect(() => {
